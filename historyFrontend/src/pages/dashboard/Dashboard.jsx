@@ -1,86 +1,50 @@
 import { useEffect, useState } from 'react';
-import { getBlogs } from '../../api/blogApi.js';
-import { getExhibits } from '../../api/exhibitApi.js';
-import { getMessages } from '../../api/messageApi.js';
-import Loader from '../../components/ui/Loader.jsx';
+import api from '../../api/api';
+import StatCard from '../../components/ui/StatCard';
 
-const statCards = [
-  { label: 'Exhibits', valueKey: 'exhibits' },
-  { label: 'Activities', valueKey: 'blogs' },
-  { label: 'Visitor messages', valueKey: 'messages' },
-];
-
-const Dashboard = () => {
-  const [stats, setStats] = useState({ exhibits: 0, blogs: 0, messages: 0 });
-  const [latest, setLatest] = useState({ exhibits: [], messages: [] });
+export default function Dashboard() {
+  const [blogs, setBlogs] = useState([]);
+  const [exhibits, setExhibits] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadDashboard = async () => {
+    const load = async () => {
       try {
-        const [exhibits, blogs, messages] = await Promise.all([getExhibits(), getBlogs(), getMessages()]);
-        setStats({ exhibits: exhibits.length, blogs: blogs.length, messages: messages.length });
-        setLatest({ exhibits: exhibits.slice(0, 3), messages: messages.slice(0, 3) });
-      } catch (error) {
-        console.error(error);
+        const [blogsRes, exhibitsRes] = await Promise.all([api.get('/blogs'), api.get('/exhibits')]);
+        setBlogs(blogsRes.data);
+        setExhibits(exhibitsRes.data);
       } finally {
         setLoading(false);
       }
     };
-
-    loadDashboard();
+    load();
   }, []);
 
-  if (loading) {
-    return <Loader label="Loading dashboard…" />;
-  }
-
   return (
-    <div className="space-y-8">
-      <div className="grid gap-4 sm:grid-cols-3">
-        {statCards.map((card) => (
-          <div key={card.label} className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-slate-950/20">
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">{card.label}</p>
-            <p className="mt-4 text-4xl font-semibold text-white">{stats[card.valueKey]}</p>
-          </div>
-        ))}
-      </div>
+    <div className="space-y-6">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Museum Exhibits" value={exhibits.length} accent="emerald" />
+        <StatCard title="Stories & Blogs" value={blogs.length} accent="blue" />
+        <StatCard title="Audio Stops" value="4" accent="amber" />
+        <StatCard title="Live Visitors" value="18" accent="rose" />
+      </section>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-slate-950/20">
-          <h3 className="text-lg font-semibold text-white">Recent exhibits</h3>
-          <div className="mt-4 space-y-4">
-            {latest.exhibits.length > 0 ? (
-              latest.exhibits.map((item) => (
-                <div key={item._id} className="rounded-3xl bg-slate-950 p-4">
-                  <h4 className="font-semibold text-white">{item.title}</h4>
-                  <p className="mt-2 text-sm text-slate-400">{item.category}</p>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-slate-500">No exhibits yet</p>
-            )}
+      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <article className="rounded-3xl border border-white/10 bg-white/8 p-6 shadow-xl">
+          <h2 className="text-xl font-semibold text-white">Recent museum highlights</h2>
+          <p className="mt-2 text-slate-300">This dashboard is connected to your backend for exhibits and stories.</p>
+          <div className="mt-6 space-y-3">
+            {loading ? <p>Loading data...</p> : blogs.slice(0, 4).map((item) => <div key={item._id} className="rounded-2xl border border-white/10 bg-black/20 p-4"> <h3 className="font-semibold text-white">{item.title}</h3><p className="text-sm text-slate-300">{item.content.slice(0, 120)}...</p></div>)}
           </div>
-        </div>
-
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-slate-950/20">
-          <h3 className="text-lg font-semibold text-white">Recent messages</h3>
-          <div className="mt-4 space-y-4">
-            {latest.messages.length > 0 ? (
-              latest.messages.map((message) => (
-                <div key={message._id} className="rounded-3xl bg-slate-950 p-4">
-                  <p className="font-semibold text-white">{message.content.slice(0, 50)}...</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">From visitor</p>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-slate-500">No messages yet</p>
-            )}
+        </article>
+        <article className="rounded-3xl border border-white/10 bg-white/8 p-6 shadow-xl">
+          <h2 className="text-xl font-semibold text-white">AR exhibit preview</h2>
+          <p className="mt-2 text-slate-300">Use image or arrow-based AR markers for Rwanda history and animals.</p>
+          <div className="mt-6 space-y-3">
+            {exhibits.slice(0, 4).map((item) => <div key={item._id} className="rounded-2xl border border-white/10 bg-black/20 p-4"><strong className="text-white">{item.title}</strong><p className="text-sm text-slate-300">{item.category}</p></div>)}
           </div>
-        </div>
-      </div>
+        </article>
+      </section>
     </div>
   );
-};
-
-export default Dashboard;
+}

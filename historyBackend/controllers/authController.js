@@ -28,7 +28,9 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('LOGIN attempt for', email);
     const existingUser = await User.findOne({ email });
+    console.log('LOGIN found user', existingUser ? 'yes' : 'no');
     if (!existingUser) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -38,7 +40,9 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: existingUser._id, role: existingUser.role }, process.env.JWT_SECRET, {
+    const secret = process.env.JWT_SECRET || 'museum-secret-key';
+    console.log('LOGIN secret exists', Boolean(secret));
+    const token = jwt.sign({ userId: existingUser._id, role: existingUser.role }, secret, {
       expiresIn: '1h'
     });
 

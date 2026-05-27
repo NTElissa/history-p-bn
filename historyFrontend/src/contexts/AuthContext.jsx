@@ -1,74 +1,45 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { login as loginApi, register as registerApi } from '../api/authApi.js';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import api from '../api/api';
+import toast from 'react-hot-toast';
 
-const AuthContext = createContext(null);
-
-const decodeToken = (token) => {
-  if (!token) return null;
-  try {
-    const payload = token.split('.')[1];
-    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-    return decoded;
-  } catch (error) {
-    return null;
-  }
-};
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('HISTORY_TOKEN'));
-  const [user, setUser] = useState(() => decodeToken(localStorage.getItem('HISTORY_TOKEN')));
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      localStorage.setItem('HISTORY_TOKEN', token);
-      setUser(decodeToken(token));
-    } else {
-      localStorage.removeItem('HISTORY_TOKEN');
-      setUser(null);
-    }
-  }, [token]);
+    const storedUser = localStorage.getItem('museum_user');
+    const storedToken = localStorage.getItem('museum_token');
+    if (storedUser && storedToken) setUser(JSON.parse(storedUser));
+    setLoading(false);
+  }, []);
 
-  const login = async (credentials) => {
-    setLoading(true);
-    setError('');
-    try {
-      const response = await loginApi(credentials);
-      setToken(response.token);
-      setLoading(false);
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Login failed');
-      setLoading(false);
-      return false;
-    }
+  const login = async (email, password) => {
+    const { data } = await api.post('/auth/login', { email, password });
+    localStorage.setItem('museum_token', data.token);
+    const decoded = JSON.parse(atob(data.token.split('.')[1]));
+    const profile = { id: decoded.userId, role: decoded.role, email };
+    localStorage.setItem('museum_user', JSON.stringify(profile));
+    setUser(profile);
+    toast.success('Welcome back to the museum dashboard');
   };
 
-  const register = async (payload) => {
-    setLoading(true);
-    setError('');
-    try {
-      await registerApi(payload);
-      setLoading(false);
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Registration failed');
-      setLoading(false);
-      return false;
-    }
+  const register = async (name, email, password) => {
+    await api.post('/auth/register', { name, email, password });
+    toast.success('Account created. Please log in.');
   };
 
   const logout = () => {
-    setToken(null);
+    localStorage.removeItem('museum_token');
+    localStorage.removeItem('museum_user');
     setUser(null);
+    toast('You have been signed out.', { icon: '👋' });
   };
 
-  return (
-    <AuthContext.Provider value={{ user, token, loading, error, login, register, logout, isAuthenticated: Boolean(user) }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = useMemo(() => ({ user, loading, login, register, logout }), [user, loading]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);

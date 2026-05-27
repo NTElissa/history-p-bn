@@ -1,85 +1,45 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext.jsx';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
-const Register = () => {
-  const { register, loading, error } = useAuth();
+export default function Register() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
 
-  const handleChange = (event) => {
-    setForm({ ...form, [event.target.name]: event.target.value });
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const success = await register(form);
-    if (success) {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await register(name, email, password);
       navigate('/login');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="mx-auto max-w-xl space-y-8 text-slate-100">
-      <div className="space-y-3 text-center">
-        <p className="text-sm uppercase tracking-[0.35em] text-sky-400/80">History Backend</p>
-        <h1 className="text-4xl font-semibold text-white">Create a new Museum account</h1>
-        <p className="text-slate-400">Register to manage exhibits, audio content and museum activities with ease.</p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#111827_0%,#030712_45%,#020617_100%)] text-slate-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl rounded-3xl border border-white/10 bg-slate-950/80 shadow-2xl overflow-hidden grid md:grid-cols-2">
+        <div className="p-8 md:p-10 bg-linear-to-br from-sky-500/10 via-slate-950 to-emerald-500/10">
+          <p className="text-xs uppercase tracking-[0.35em] text-sky-300">New visitor</p>
+          <h1 className="mt-4 text-3xl font-semibold">Create your museum account.</h1>
+          <p className="mt-4 text-slate-300">Register to explore exhibits, leave comments, and enjoy AR audio features.</p>
+        </div>
+        <div className="p-8 md:p-10">
+          <h2 className="text-2xl font-semibold">Register</h2>
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            <input className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white placeholder:text-slate-400" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} />
+            <input className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white placeholder:text-slate-400" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="password" className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white placeholder:text-slate-400" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <button disabled={loading} className="w-full rounded-2xl bg-sky-400 px-4 py-3 font-semibold text-slate-950 hover:bg-sky-300 disabled:opacity-70">{loading ? 'Creating account...' : 'Register'}</button>
+          </form>
+          <p className="mt-6 text-sm text-slate-300">Already have an account? <Link to="/login" className="text-emerald-300">Login</Link></p>
+        </div>
       </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-slate-800 bg-slate-950/95 p-8 shadow-xl shadow-slate-950/10">
-        {error && <div className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{error}</div>}
-
-        <label className="block">
-          <span className="mb-2 block text-sm text-slate-400">Full name</span>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-            className="w-full rounded-3xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-sky-400"
-          />
-        </label>
-
-        <label className="block">
-          <span className="mb-2 block text-sm text-slate-400">Email address</span>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="w-full rounded-3xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-sky-400"
-          />
-        </label>
-
-        <label className="block">
-          <span className="mb-2 block text-sm text-slate-400">Password</span>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="w-full rounded-3xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-sky-400"
-          />
-        </label>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-3xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? 'Creating account…' : 'Create account'}
-        </button>
-
-        <p className="text-center text-sm text-slate-400">
-          Already registered? <a href="/login" className="font-semibold text-sky-300 underline">Sign in</a>
-        </p>
-      </form>
     </div>
   );
-};
-
-export default Register;
+}

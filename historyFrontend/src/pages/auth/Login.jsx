@@ -1,73 +1,49 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext.jsx';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
-const Login = () => {
-  const { login, loading, error } = useAuth();
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
 
-  const handleChange = (event) => {
-    setForm({ ...form, [event.target.name]: event.target.value });
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const success = await login(form);
-    if (success) {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await login(email, password);
       navigate('/dashboard');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="mx-auto max-w-xl space-y-8 text-slate-100">
-      <div className="space-y-3 text-center">
-        <p className="text-sm uppercase tracking-[0.35em] text-sky-400/80">History Backend</p>
-        <h1 className="text-4xl font-semibold text-white">Sign in to access the museum dashboard</h1>
-        <p className="text-slate-400">Use your account to manage exhibits, audio content, comments, activities, and analytics.</p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#111827_0%,#030712_45%,#020617_100%)] text-slate-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl rounded-3xl border border-white/10 bg-slate-950/80 shadow-2xl overflow-hidden grid md:grid-cols-2">
+        <div className="p-8 md:p-10 bg-linear-to-br from-emerald-500/10 via-slate-950 to-sky-500/10">
+          <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">AR Museum</p>
+          <h1 className="mt-4 text-3xl font-semibold">Explore Rwanda history through interactive AR stories.</h1>
+          <p className="mt-4 text-slate-300">A modern museum platform combining exhibits, music, comments, and management tools for staff and visitors.</p>
+          <ul className="mt-8 space-y-3 text-sm text-slate-200">
+            <li>• AR-ready image and audio exhibits</li>
+            <li>• Visitor comments and museum activity feed</li>
+            <li>• Staff and admin dashboard controls</li>
+          </ul>
+        </div>
+        <div className="p-8 md:p-10">
+          <h2 className="text-2xl font-semibold">Sign in</h2>
+          <p className="mt-2 text-slate-300">Use your museum account to continue.</p>
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            <input className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white placeholder:text-slate-400" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="password" className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white placeholder:text-slate-400" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <button disabled={loading} className="w-full rounded-2xl bg-emerald-400 px-4 py-3 font-semibold text-slate-950 hover:bg-emerald-300 disabled:opacity-70">{loading ? 'Signing in...' : 'Login'}</button>
+          </form>
+          <p className="mt-6 text-sm text-slate-300">No account yet? <Link to="/register" className="text-emerald-300">Create one</Link></p>
+        </div>
       </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-slate-800 bg-slate-950/95 p-8 shadow-xl shadow-slate-950/10">
-        {error && <div className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{error}</div>}
-
-        <label className="block">
-          <span className="mb-2 block text-sm text-slate-400">Email address</span>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="w-full rounded-3xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-sky-400"
-          />
-        </label>
-
-        <label className="block">
-          <span className="mb-2 block text-sm text-slate-400">Password</span>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="w-full rounded-3xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-sky-400"
-          />
-        </label>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-3xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? 'Signing in…' : 'Sign in'}
-        </button>
-
-        <p className="text-center text-sm text-slate-400">
-          New here? <a href="/register" className="font-semibold text-sky-300 underline">Create an account</a>
-        </p>
-      </form>
     </div>
   );
-};
-
-export default Login;
+}
