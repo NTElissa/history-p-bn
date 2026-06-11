@@ -20,6 +20,7 @@ import { publicRouter as searchPublic } from './routes/searchRoutes.js';
 import { adminRouter as analyticsAdmin, publicRouter as analyticsPublic } from './routes/adminAnalyticsRoutes.js';
 
 // Standalone routes
+// Visitor auth routes (validate code to get token)
 import authRoutes from './routes/authRoutes.js';
 import qrRoutes from './routes/qrRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
