@@ -116,7 +116,7 @@ export const narrateExhibit = asyncHandler(async (req, res) => {
 
     if (exhibitionId && !text) {
       const exhibition = await Exhibition.findById(exhibitionId).lean();
-      if (!exhibition) return res.status(404).json({ message: 'Exhibition not found' });
+      // if (!exhibition) return res.status(404).json({ message: 'Exhibition not found' });
 
       narrationText = `Welcome! You're looking at ${getLocalizedText(exhibition.title)}. `;
       const desc = getLocalizedText(exhibition.fullDescription || exhibition.description);
